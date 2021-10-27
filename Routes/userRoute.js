@@ -3,10 +3,12 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const UserModel = require('../Model/userModel');
+const TranxModel = require('../Model/tranxModel');
 const { UserAuthMiddleware } = require('../Middlewares/authMiddleware');
 const { ipLookup } = require('../functions/ipLookup');
 const { registerValidation, loginValidation } = require('../Joi_Validation/register_login_validation');
 const walletGen = require('../functions/walletGen');
+const refGen = require('../functions/refGen');
 
 route.post('/register', async (req, res) => {
   const { error } = registerValidation(req.body);
@@ -16,7 +18,7 @@ route.post('/register', async (req, res) => {
 
   try {
     const emailExist = await UserModel.findOne({ email: req.body.email });
-    const phoneExist = await UserModel.findOne({ phone: req.body.phone });
+    const phoneExist = await UserModel.findOne({ phoneNumber: req.body.phone });
     if (emailExist) {
       return res.status(400).json({
         message: 'Email is already in Use',
@@ -46,7 +48,7 @@ route.post('/register', async (req, res) => {
       }
     });
 
-    const walletAddress = walletGen();
+    const walletAddress = walletGen().trim();
 
     const user = new UserModel({
       name: req.body.name,
@@ -54,7 +56,7 @@ route.post('/register', async (req, res) => {
       phoneNumber: req.body.phone,
       isClient,
       ipAddress: req.body.ip,
-      walletAddress: walletAddress.trim(),
+      walletAddress,
       password: hashedPassword,
     });
     const token = jwt.sign({ _id: user._id }, process.env.UserToken, { expiresIn: 60 * 60 });
@@ -87,7 +89,7 @@ route.post('/login', async (req, res) => {
       });
     } else if (req.body.phone) {
       user = await UserModel.findOne({
-        phone: req.body.phone,
+        phoneNumber: req.body.phone,
       });
     } else {
       return res.status(400).json({ errMessage: 'Please use email or phone number to login' });
@@ -143,6 +145,7 @@ route.get('/', UserAuthMiddleware, async (req, res) => {
 
 route.get('/receipient', UserAuthMiddleware, async (req, res) => {
   try {
+    const user = await UserModel.findById(req.user);
     const receipient = await UserModel.findOne({ walletAddress: req.body.wallet });
 
     if(!receipient) {
@@ -151,12 +154,195 @@ route.get('/receipient', UserAuthMiddleware, async (req, res) => {
       });
     }
 
+    if (user.walletAddress === req.body.wallet) {
+      return res.status(201).json({
+        message: 'Error. Can not transfer to same beneficiary',
+      });
+    }
+
+
     return res.status(200).json({
+      id: receipient._id,
       user: receipient.name,
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       message: 'Internal Server Error. Try Again!!',
+    });
+  }
+});
+
+route.put('/transfer', UserAuthMiddleware, async (req, res) => {
+  try {
+    const sender = await UserModel.findById(req.user);
+    const receiver = await UserModel.findById(req.body.id);
+
+    if (sender.accountBalance === 0) {
+      return res.status(201).json({
+        message: 'Insufficient Funds!!',
+      });
+    }
+
+    if (req.body.amount > sender.accountBalance) {
+      return res.status(201).json({
+        message: 'Insufficient Funds!!',
+      });
+    }
+
+    const senderBalance = sender.accountBalance - req.body.amount;
+    const receiverBalance = receiver.accountBalance + req.body.amount;
+
+    const ref = refGen(15);
+    const date = new Date();
+
+    const transDoc = new TranxModel({
+      sender: sender._id,
+      receiver: receiver._id,
+      reason: req.body.reason,
+      amount: req.body.amount,
+      ref,
+    });
+
+    transDoc.save();
+
+    const updatedSender = await UserModel.findByIdAndUpdate(sender._id, {
+      accountBalance: senderBalance,
+      $push: {
+        transfer: {
+          id: transDoc._id,
+          sender: true,
+        },
+      },
+    });
+
+    updatedSender.save();
+
+    const updatedReceiver = await UserModel.findByIdAndUpdate(receiver._id, {
+      accountBalance: receiverBalance,
+      $push: {
+        transfer: {
+          id: transDoc._id,
+          sender: false,
+        },
+      },
+    });
+
+    updatedReceiver.save();
+
+    return res.status(200).json({
+      message: 'success',
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: 'Internal Server Error',
+    });
+  }
+});
+
+route.put('/update-user', UserAuthMiddleware, async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.user);
+
+    if (!user) {
+      return res.status(404).json({
+        errMessage: 'No User found... Please Register',
+      });
+    }
+
+    let updatePersonalInformation;
+
+    if (req.body.name.length !== 0 && req.body.email === '' && req.body.phone === '') {
+      updatePersonalInformation = await UserModel.findByIdAndUpdate(user._id, {
+        name: req.body.name,
+      });
+    }
+
+    if (req.body.email.length !== 0 && req.body.name === '' && req.body.phone === '') {
+      const emailExist = await UserModel.findOne({ email: req.body.email });
+      if (emailExist) {
+        return res.status(201).json({
+          errMessage: 'This Email Already Exist!!',
+        });
+      }
+      updatePersonalInformation = await UserModel.findByIdAndUpdate(user._id, {
+        email: req.body.email,
+      });
+    }
+
+    if (req.body.phone.length !== 0 && req.body.name === '' && req.body.email === '') {
+      const phoneExist = await UserModel.findOne({ phoneNumber: req.body.phone });
+      if (phoneExist) {
+        return res.status(201).json({
+          errMessage: 'This Phone Number Already Exist!!',
+        });
+      }
+      updatePersonalInformation = await UserModel.findByIdAndUpdate(user._id, {
+        phoneNumber: req.body.phone,
+      });
+    }
+
+    if (req.body.name.length !== 0 && req.body.email.length !== 0 && req.body.phone.length !== 0) {
+      const emailExist = await UserModel.findOne({ email: req.body.email });
+      const phoneExist = await UserModel.findOne({ phone: req.body.phone });
+
+      if (emailExist) {
+        return res.status(201).json({
+          errMessage: 'Email Already Exist!!',
+        });
+      }
+
+      if (phoneExist) {
+        return res.status(201).json({
+          errMessage: 'Phone Number Already Exist!!',
+        });
+      }
+
+      updatePersonalInformation = await UserModel.findOneAndUpdate({
+        name: req.body.name,
+        email: req.body.email,
+        phone: req.body.phone,
+      });
+    }
+
+    updatePersonalInformation.save();
+
+    return res.status(200).json({
+      successMessage: 'Saved Successfully',
+    });
+  } catch (error) {
+    return res.status(400).json({
+      errMessage: 'Something went wrong!!',
+    });
+  }
+});
+
+route.get('/transactions', UserAuthMiddleware, async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.user);
+    const transactions = await TranxModel.find({ sender: user._id }).sort({ _id: 'desc' });
+
+    if (transactions.length === 0) {
+      return res.status(404).json({
+        message: 'Not Found',
+      });
+    }
+
+    const receiver = await UserModel.findById(transactions.receiver);
+
+    return res.status(200).json({
+      message: {
+        transactions,
+        receiver: {
+          name: receiver.name,
+          wallet: receiver.walletAddress,
+        },
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Internal Server Error',
     });
   }
 });
