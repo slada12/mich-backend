@@ -44,7 +44,7 @@ app.get('/', (req, res) => {
   res.send('The App is Working');
 });
 
-const port = 5000;
+const port = process.env.PORT || 5000;
 
 app.listen(port, () => {
   console.log(`Server started at ${port}`);
