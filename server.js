@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 const chalk = require('chalk');
 require('dotenv').config();
 
@@ -24,17 +25,26 @@ require('dotenv').config();
   });
 }());
 
+const corsOption = {
+  origin: ['http://localhost:3000', 'https://crypto-frontend.pages.dev'],
+};
+
 
 const app = express();
 const userRoute = require('./Routes/userRoute');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors(corsOption));
 
 
 app.use('/api/user/', userRoute);
 
-const port = 6000;
+app.get('/', (req, res) => {
+  res.send('The App is Working');
+});
+
+const port = 5000;
 
 app.listen(port, () => {
   console.log(`Server started at ${port}`);

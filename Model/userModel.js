@@ -13,6 +13,7 @@ const UserModel = new Schema({
   },
   walletAddress: String,
   phoneNumber: String,
+  bitcoinAddress: String,
   address: {
     houseAddress: String,
     city: String,

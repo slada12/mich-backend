@@ -3,10 +3,9 @@ const joi = require('joi');
 const registerValidation = (data) => {
   const schema = joi.object({
     name: joi.string().required(),
-    phone: joi.number().required(),
+    phone: joi.number(),
     email: joi.string().email().required(),
     password: joi.string().required(),
-    ip: joi.string().required(),
   });
   return schema.validate(data);
 };
