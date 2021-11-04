@@ -19,17 +19,7 @@ route.post('/register', async (req, res) => {
   }
 
   try {
-    const ip = req.socket.remoteAddress;
-
-    console.log(ip);
-
-    if (ip === undefined) {
-      return res.status(400).json({
-        message: 'Bad Request. Try Again',
-      });
-    }
-
-    const ipExist = await IPModel.findOne({ ip, });
+    const ipExist = await IPModel.findOne({ ip: req.body.ip });
     if (!ipExist) {
       return res.status(403).json({
         message: 'Forbidden to Access this Page',
@@ -53,7 +43,7 @@ route.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
     let isClient;
 
-    await ipLookup(ip, async (err, data) => {
+    await ipLookup(req.body.ip, async (err, data) => {
       try {
         if (err) {
           return res.status(400).json({
