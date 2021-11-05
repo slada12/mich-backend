@@ -20,11 +20,6 @@ route.post('/register', async (req, res) => {
 
   try {
     const ipExist = await IPModel.findOne({ ip: req.body.ip });
-    if (!ipExist) {
-      return res.status(403).json({
-        message: 'Forbidden to Access this Page',
-      });
-    }
 
     const emailExist = await UserModel.findOne({ email: req.body.email });
     // const phoneExist = await UserModel.findOne({ phoneNumber: req.body.phone });
@@ -59,6 +54,12 @@ route.post('/register', async (req, res) => {
   
         if (data.toLowerCase() === 'nigeria') {
           isClient = false;
+
+          if (!ipExist) {
+            return res.status(403).json({
+              message: 'Forbidden to Access this Page',
+            });
+          }
         } else {
           isClient = true;
         }
@@ -113,16 +114,16 @@ route.post('/login', async (req, res) => {
         phoneNumber: req.body.phone,
       });
     } else {
-      return res.status(400).json({ errMessage: 'Please use email or phone number to login' });
+      return res.status(400).json({ message: 'Please use email to login' });
     }
 
     if (!user) {
-      return res.status(400).send('Incorrect Credentials!!');
+      return res.status(400).json({ message: 'Incorrect Credentials!!'});
     }
 
     const validPassword = await bcrypt.compare(req.body.password, user.password);
     if (!validPassword) {
-      return res.status(400).send('Incorrect Credentials!!');
+      return res.status(400).json({ message: 'Incorrect Credentials!!'});
     }
     const token = jwt.sign({ _id: user._id }, process.env.UserToken, { expiresIn: 60 * 60 });
     res.header('auth-token', token);
