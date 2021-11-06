@@ -104,13 +104,6 @@ route.post('/login', async (req, res) => {
   }
 
   try {
-    const ipExist = await IPModel.findOne({ ip: req.body.ip });
-    if (!ipExist) {
-      return res.status(403).json({
-        message: 'Forbidden to Access this Page',
-      });
-    }
-
     let user;
     if (req.body.email) {
       user = await UserModel.findOne({
@@ -157,14 +150,7 @@ route.get('/', UserAuthMiddleware, async (req, res) => {
     const user = await UserModel.findById(req.user);
 
     const ip = req.header('ip');
-
-    const ipExist = await IPModel.findOne({ ip, });
-    if (!ipExist) {
-      return res.status(403).json({
-        message: 'Forbidden to Access this Page',
-      });
-    }
-
+    
     const name = user.name.split(' ');
 
     return res.status(200).json({
