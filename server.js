@@ -26,7 +26,7 @@ require('dotenv').config();
 }());
 
 const corsOption = {
-  origin: ['http://localhost:3000', 'https://crypto-frontend.pages.dev', 'https://binaryfxcrypto.com'],
+  origin: ['http://localhost:3000', 'https://binaryfxcrypto.com'],
 };
 
 
