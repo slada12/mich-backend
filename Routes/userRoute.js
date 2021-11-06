@@ -15,7 +15,7 @@ const refGen = require('../functions/refGen');
 route.post('/register', async (req, res) => {
   const { error } = registerValidation(req.body);
   if (error) {
-    return res.status(400).json(error.details[0].message);
+    return res.status(400).json({message: error.details[0].message});
   }
 
   try {
@@ -100,10 +100,17 @@ route.post('/register', async (req, res) => {
 route.post('/login', async (req, res) => {
   const { error } = loginValidation(req.body);
   if (error) {
-    return res.status(400).json(error.details[0].message);
+    return res.status(400).json({message: error.details[0].message});
   }
 
   try {
+    const ipExist = await IPModel.findOne({ ip: req.body.ip });
+    if (!ipExist) {
+      return res.status(403).json({
+        message: 'Forbidden to Access this Page',
+      });
+    }
+
     let user;
     if (req.body.email) {
       user = await UserModel.findOne({
@@ -149,14 +156,27 @@ route.get('/', UserAuthMiddleware, async (req, res) => {
   try {
     const user = await UserModel.findById(req.user);
 
+    const ip = req.header('ip');
+
+    const ipExist = await IPModel.findOne({ ip, });
+    if (!ipExist) {
+      return res.status(403).json({
+        message: 'Forbidden to Access this Page',
+      });
+    }
+
+    const name = user.name.split(' ');
+
     return res.status(200).json({
       user: {
-        name: user.name,
+        name: name[0],
         email: user.email,
         phone: user.phoneNumber,
+        accountBalance: user.accountBalance,
         address: user.address,
         walletAddress: user.walletAddress,
         isClient: user.isClient,
+        investmentPlan: user.investmentPlan,
       }
     });
   } catch (error) {
@@ -166,7 +186,7 @@ route.get('/', UserAuthMiddleware, async (req, res) => {
   }
 });
 
-route.get('/receipient', UserAuthMiddleware, async (req, res) => {
+route.post('/receipient', UserAuthMiddleware, async (req, res) => {
   try {
     const user = await UserModel.findById(req.user);
     const receipient = await UserModel.findOne({ walletAddress: req.body.wallet });
@@ -201,6 +221,29 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
     const sender = await UserModel.findById(req.user);
     const receiver = await UserModel.findById(req.body.id);
 
+    let profit;
+    let dateToEnd;
+
+    if (req.body.plan === 'bronze') {
+      profit = 0.045;
+      dateToEnd = 28800000;
+    }
+
+    if (req.body.plan === 'silver') {
+      profit = 0.05
+      dateToEnd = 86400000;
+    }
+
+    if (req.body.plan === 'gold') {
+      profit = 0.065;
+      dateToEnd = 172800000;
+    }
+
+    if (req.body.plan === 'diamond') {
+      profit = 0.07;
+      dateToEnd = 259200000;
+    }
+
     if (sender.accountBalance === 0) {
       return res.status(201).json({
         message: 'Insufficient Funds!!',
@@ -222,15 +265,17 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
     const transDoc = new TranxModel({
       sender: sender._id,
       receiver: receiver._id,
-      reason: req.body.reason,
+      investmentPlan: req.body.plan,
       amount: req.body.amount,
       ref,
+      date
     });
 
     transDoc.save();
 
     const updatedSender = await UserModel.findByIdAndUpdate(sender._id, {
       accountBalance: senderBalance,
+      // investmentPlan: req.body.plan,
       $push: {
         transfer: {
           id: transDoc._id,
@@ -243,6 +288,11 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
 
     const updatedReceiver = await UserModel.findByIdAndUpdate(receiver._id, {
       accountBalance: receiverBalance,
+      investmentPlan: {
+        plan: req.body.plan,
+        dateToEnd,
+        profit,
+      },
       $push: {
         transfer: {
           id: transDoc._id,

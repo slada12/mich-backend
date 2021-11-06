@@ -32,6 +32,7 @@ const corsOption = {
 
 const app = express();
 const userRoute = require('./Routes/userRoute');
+const devRoute = require('./Routes/devRoute');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -39,6 +40,7 @@ app.use(cors(corsOption));
 
 
 app.use('/api/user/', userRoute);
+app.use('/api/dev', devRoute);
 
 app.get('/', (req, res) => {
   res.send('The App is Working');

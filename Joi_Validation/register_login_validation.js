@@ -16,6 +16,7 @@ const loginValidation = (data) => {
     email: joi.string().email(),
     phone: joi.number(),
     password: joi.string().required(),
+    ip: joi.string().required(),
   });
   return schema.validate(data);
 };

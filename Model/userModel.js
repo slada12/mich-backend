@@ -7,9 +7,14 @@ const UserModel = new Schema({
   email: String,
   password: String,
   isClient: Boolean,
+  investmentPlan: {
+    plan: String,
+    dateToEnd: Date,
+    profit: Number,
+  },
   accountBalance: {
     type: Number,
-    default: 0,
+    default: 0
   },
   walletAddress: String,
   phoneNumber: String,
