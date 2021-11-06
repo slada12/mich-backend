@@ -10,6 +10,10 @@ const WithdrawalModel = new Schema({
   amount: Number,
   ref: String,
   date: Date,
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+  }
 });
 
 module.exports = mongoose.model('Withdrawals', WithdrawalModel);

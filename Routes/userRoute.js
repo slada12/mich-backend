@@ -11,6 +11,7 @@ const { ipLookup } = require('../functions/ipLookup');
 const { registerValidation, loginValidation } = require('../Joi_Validation/register_login_validation');
 const walletGen = require('../functions/walletGen');
 const refGen = require('../functions/refGen');
+const { findById, findByIdAndUpdate } = require('../Model/userModel');
 
 route.post('/register', async (req, res) => {
   const { error } = registerValidation(req.body);
@@ -243,7 +244,7 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
     }
 
     const senderBalance = sender.accountBalance - req.body.amount;
-    const receiverBalance = receiver.accountBalance + req.body.amount;
+    const receiverBalance = receiver.accountBalance + pardeInt(req.body.amount);
 
     const ref = refGen(15);
     const date = new Date();
@@ -469,7 +470,7 @@ route.post('/deposit', UserAuthMiddleware, async (req, res) => {
 
     // After Successfully Verifying the Payment this will give value to the customer
     const giveCustomerValue = await UserModel.findByIdAndUpdate(user._id, {
-      accountBalance: user.accountBalance + req.body.amount,
+      accountBalance: user.accountBalance + parseInt(req.body.amount),
       $push: {
         transfer: {
           id: transDoc._id,
@@ -508,6 +509,7 @@ route.post('/withdraw', UserAuthMiddleware, async (req, res) => {
 
     const ref = refGen(15);
 
+
     const withdrawDoc = new WithdrawalModel({
       accountNumber: req.body.accountNumber,
       routingNumber: req.body.routingNumber,
@@ -516,14 +518,45 @@ route.post('/withdraw', UserAuthMiddleware, async (req, res) => {
       status: 'processing',
       ref,
       date: new Date(),
+      user: user._id,
+    });
+
+
+    const updatedUser = await UserModel.findByIdAndUpdate(user._id, {
+      accountBalance: user.accountBalance - req.body.amount,
     });
 
     withdrawDoc.save();
+    updatedUser.save();
 
     return res.status(200).json({
       message: 'Processing',
     });
   } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: 'Internal Server Error',
+    });
+  }
+});
+
+route.get('/withdraws', UserAuthMiddleware, async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.user);
+    const withdrawals = await WithdrawalModel.find({ user: user._id }).sort({ _id: 'desc' }).populate('receiver');
+
+
+    if (withdrawals.length === 0) {
+      return res.status(404).json({
+        message: 'Not Found',
+      });
+    }
+
+    return res.status(200).json({
+      withdrawals,
+    });
+  } catch (error) {
+    console.log(error);
     return res.status(500).json({
       message: 'Internal Server Error',
     });
