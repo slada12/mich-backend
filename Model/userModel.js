@@ -16,6 +16,10 @@ const UserModel = new Schema({
     type: Number,
     default: 0
   },
+  investmentBalance: {
+    type: Number,
+    default: 0,
+  },
   walletAddress: String,
   phoneNumber: String,
   bitcoinAddress: String,

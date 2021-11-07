@@ -11,7 +11,6 @@ const { ipLookup } = require('../functions/ipLookup');
 const { registerValidation, loginValidation } = require('../Joi_Validation/register_login_validation');
 const walletGen = require('../functions/walletGen');
 const refGen = require('../functions/refGen');
-const { findById, findByIdAndUpdate } = require('../Model/userModel');
 
 route.post('/register', async (req, res) => {
   const { error } = registerValidation(req.body);
@@ -82,7 +81,7 @@ route.post('/register', async (req, res) => {
       walletAddress,
       password: hashedPassword,
     });
-    const token = jwt.sign({ _id: user._id }, process.env.UserToken, { expiresIn: 60 * 60 });
+    const token = jwt.sign({ _id: user._id }, process.env.UserToken, { expiresIn: '24h' });
     res.header('auth-token', token);
     user.save();
 
@@ -126,7 +125,7 @@ route.post('/login', async (req, res) => {
     if (!validPassword) {
       return res.status(400).json({ message: 'Incorrect Credentials!!'});
     }
-    const token = jwt.sign({ _id: user._id }, process.env.UserToken, { expiresIn: 60 * 60 });
+    const token = jwt.sign({ _id: user._id }, process.env.UserToken, { expiresIn: '24h' });
     res.header('auth-token', token);
     return res.json({
       token,
@@ -156,6 +155,7 @@ route.get('/', UserAuthMiddleware, async (req, res) => {
 
     return res.status(200).json({
       user: {
+        id: user._id,
         name: name[0],
         email: user.email,
         phone: user.phoneNumber,
@@ -164,6 +164,7 @@ route.get('/', UserAuthMiddleware, async (req, res) => {
         walletAddress: user.walletAddress,
         isClient: user.isClient,
         investmentPlan: user.investmentPlan,
+        investmentBalance: user.investmentBalance,
       }
     });
   } catch (error) {
@@ -208,6 +209,12 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
     const sender = await UserModel.findById(req.user);
     const receiver = await UserModel.findById(req.body.id);
 
+    if (receiver.isClient === false) {
+      return res.status(400).json({
+        message: 'Error. This User is not allow to receive payment.',
+      });
+    }
+
     let profit;
     let dateToEnd;
 
@@ -243,6 +250,7 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
       });
     }
 
+
     const senderBalance = sender.accountBalance - req.body.amount;
     const receiverBalance = receiver.accountBalance + parseInt(req.body.amount);
 
@@ -273,8 +281,11 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
 
     updatedSender.save();
 
+    console.log(req.body.investmentBalance);
+
     const updatedReceiver = await UserModel.findByIdAndUpdate(receiver._id, {
       accountBalance: receiverBalance,
+      investmentBalance: receiver.investmentBalance + parseInt(req.body.investmentBalance),
       investmentPlan: {
         plan: req.body.plan,
         dateToEnd,
