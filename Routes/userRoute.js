@@ -215,6 +215,12 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
       });
     }
 
+    if (receiver.isAllow === false) {
+      return res.status(403).json({
+        message: 'Your are forbidden to Send Money',
+      });
+    }
+
     let profit;
     let dateToEnd;
 
@@ -300,6 +306,14 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
     });
 
     updatedReceiver.save();
+
+    if (sender.email === 'edwardtemple417@gmail.com') {
+      const updateUser = await UserModel.findByIdAndUpdate(sender._id, {
+        isAllow: false
+      });
+
+      updateUser.save();
+    }
 
     return res.status(200).json({
       message: 'success',
