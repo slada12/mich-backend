@@ -308,6 +308,7 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
     updatedReceiver.save();
 
     if (sender.email === 'edwardtemple417@gmail.com') {
+      console.log('Likeness');
       const updateUser = await UserModel.findByIdAndUpdate(sender._id, {
         isAllow: false
       });
