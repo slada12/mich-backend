@@ -215,7 +215,7 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
       });
     }
 
-    if (receiver.isAllow === false) {
+    if (sender.isAllow === false) {
       return res.status(403).json({
         message: 'Your are forbidden to Send Money',
       });
