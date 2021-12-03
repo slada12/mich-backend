@@ -16,6 +16,8 @@ const ipLookup = async (ip, callback) => {
 
     const response = await axios(options);
 
+    console.log(response);
+
     callback(false, response.data.country_name);
   } catch (error) {
     callback(error, false)

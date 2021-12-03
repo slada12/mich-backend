@@ -64,6 +64,7 @@ route.post('/register', async (req, res) => {
           isClient = true;
         }
       } catch (error) {
+        console.log(error);
         return res.status(500).json({
           message: 'Internal Server Error',
         });
@@ -157,6 +158,7 @@ route.get('/', UserAuthMiddleware, async (req, res) => {
       user: {
         id: user._id,
         name: name[0],
+        fullname: user.name,
         email: user.email,
         phone: user.phoneNumber,
         accountBalance: user.accountBalance,
@@ -317,7 +319,7 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
     }
 
     return res.status(200).json({
-      message: 'success',
+      message: `You transfer has been sent to ${receiver.name}`,
     });
   } catch (error) {
     console.log(error);
