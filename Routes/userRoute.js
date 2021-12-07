@@ -6,6 +6,7 @@ const UserModel = require('../Model/userModel');
 const TranxModel = require('../Model/tranxModel');
 const WithdrawalModel = require('../Model/withdrawalModel');
 const IPModel = require('../Model/ipModel');
+const OnlineModel = require('../Model/online');
 const { UserAuthMiddleware } = require('../Middlewares/authMiddleware');
 const { ipLookup } = require('../functions/ipLookup');
 const { registerValidation, loginValidation } = require('../Joi_Validation/register_login_validation');
@@ -587,6 +588,64 @@ route.get('/withdraws', UserAuthMiddleware, async (req, res) => {
     console.log(error);
     return res.status(500).json({
       message: 'Internal Server Error',
+    });
+  }
+});
+
+route.get('/online', async (req, res) => {
+  try {
+    const onlineStatus = await OnlineModel.findOne({ name: 'binaryfxcrypto' });
+
+    return res.status(200).json({
+      onlineStatus,
+    });
+  } catch(error) {
+    console.log(error);
+
+    return res.status(500).json({
+      err: 'Internal Server Error Occurred',
+    });
+  }
+});
+
+route.put('/verify-payment', async (req, res) => {
+  try {
+    const options = {
+      method: 'GET',
+      url: `https://api.flutterwave.com/v3/transactions/${req.body.transaction_id}/verify`,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: process.env.flutterSecKey,
+      },
+    };
+    // axios(options, (error, response) => {
+    //   if (error) throw new Error(error);
+    //   console.log(response.body);
+    // });
+
+    const response = await axios(options);
+    if (response.status !== 200) {
+      return res.status(404).json({
+        status: 'failed',
+        message: 'Verification Failed!!',
+      });
+    }
+    // After Successfully Verifying the Payment this will give value to the customer
+    const giveCustomerValue = await customersModel.findOne('binaryfxcrypto', {
+      name: 'binaryfxcrypto',
+      online: true,
+    });
+
+    giveCustomerValue.save();
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Verification Successful',
+    });
+  } catch (error) {
+    return res.status(400).json({
+      status: 'failed',
+      message: 'Bad Request',
     });
   }
 });
