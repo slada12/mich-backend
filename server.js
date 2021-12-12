@@ -26,7 +26,7 @@ require('dotenv').config();
 }());
 
 const corsOption = {
-  origin: ['http://localhost:3000', 'https://binaryfxcrypto.com', 'http://localhost:5502', 'https://meta2trader.com'],
+  origin: ['http://localhost:3000', 'https://binaryfxcrypto.com', 'http://localhost:5502', 'https://meta2trader.com', 'https://meta3trader.com'],
 };
 
 
