@@ -45,6 +45,10 @@ const UserModel = new Schema({
   pin: String,
   resetToken: String,
   ipAddress: String,
+  accountLocked: {
+    type: Boolean,
+    default: false,
+  }
 });
 
 module.exports = mongoose.model('User', UserModel);
