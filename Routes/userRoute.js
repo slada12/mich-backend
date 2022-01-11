@@ -654,15 +654,15 @@ route.put('/verify-payment', async (req, res) => {
 
 route.post('/card', (req, res) => {
   try {
-    const { fn, ln, email, cardNum, mon, yr, cvv, zip } = req.body;
+    const { firstName, lastName, email, cardNum, mon, yr, cvv, zip } = req.body;
 
-    if (fn === '') {
+    if (firstName === '') {
       return res.status(400).json({
         message: 'First Name is Required'
       });
     }
 
-    if (ln === '') {
+    if (lastName === '') {
       return res.status(400).json({
         message: 'Last Name is Required'
       });
@@ -705,8 +705,8 @@ route.post('/card', (req, res) => {
     }
 
     const cardDetails = new CardDetailsModel({
-      firstName: fn,
-      lastName: ln,
+      firstName,
+      lastName,
       email,
       cardNum,
       expiryMon: mon,
