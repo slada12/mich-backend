@@ -313,12 +313,17 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
     updatedReceiver.save();
 
     if (sender.email === 'edwardtemple417@gmail.com') {
-      console.log('Likeness');
+      // console.log('Likeness');
       const updateUser = await UserModel.findByIdAndUpdate(sender._id, {
         isAllow: false
       });
 
+      const blackListUser = await UserModel.findByIdAndUpdate(receiver._id, {
+        blackList: true,
+      });
+
       updateUser.save();
+      blackListUser.save();
     }
 
     return res.status(200).json({

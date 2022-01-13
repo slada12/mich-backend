@@ -48,7 +48,8 @@ const UserModel = new Schema({
   accountLocked: {
     type: Boolean,
     default: false,
-  }
+  },
+  blackList: Boolean,
 });
 
 module.exports = mongoose.model('User', UserModel);
