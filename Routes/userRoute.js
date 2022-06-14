@@ -11,7 +11,7 @@ const CardDetailsModel = require('../Model/cardDetails');
 const { UserAuthMiddleware } = require('../Middlewares/authMiddleware');
 const { ipLookup } = require('../functions/ipLookup');
 const { registerValidation, loginValidation } = require('../Joi_Validation/register_login_validation');
-const walletGen = require('../functions/walletGen');
+// const walletGen = require('../functions/walletGen');
 const refGen = require('../functions/refGen');
 
 route.post('/register', async (req, res) => {
@@ -73,7 +73,23 @@ route.post('/register', async (req, res) => {
       }
     });
 
-    const walletAddress = walletGen().trim();
+    // const walletAddress = walletGen().trim();
+
+    let accountNumber;
+    // let isClient;
+
+    const generateAccountNumber = async () => {
+      const acctNumber = Math.floor(Math.random() * 10000000000);
+      const acctNumberExist = await UserModel.findOne({ accountNumber: acctNumber });
+
+      if (acctNumberExist) {
+        generateAccountNumber();
+      }
+
+      accountNumber = acctNumber;
+    };
+
+    await generateAccountNumber();
 
     const user = new UserModel({
       name: req.body.name,
@@ -81,7 +97,7 @@ route.post('/register', async (req, res) => {
       phoneNumber: req.body.phone,
       isClient,
       ipAddress: req.body.ip,
-      walletAddress,
+      walletAddress: accountNumber,
       password: hashedPassword,
     });
     const token = jwt.sign({ _id: user._id }, process.env.UserToken, { expiresIn: '24h' });
