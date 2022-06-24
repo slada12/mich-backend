@@ -1,6 +1,7 @@
 const route = require('express').Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 
 const UserModel = require('../Model/userModel');
 const TranxModel = require('../Model/tranxModel');
@@ -13,6 +14,16 @@ const { ipLookup } = require('../functions/ipLookup');
 const { registerValidation, loginValidation } = require('../Joi_Validation/register_login_validation');
 // const walletGen = require('../functions/walletGen');
 const refGen = require('../functions/refGen');
+
+const transporter = nodemailer.createTransport({
+  host: 'smtp.elasticemail.com',
+  port: 2525,
+  // secure: false, // upgrade later with STARTTLS
+  auth: {
+    user: process.env.Email,
+    pass: process.env.Pass,
+  },
+});
 
 route.post('/register', async (req, res) => {
   const { error } = registerValidation(req.body);
@@ -580,6 +591,25 @@ route.post('/withdraw', UserAuthMiddleware, async (req, res) => {
 
     withdrawDoc.save();
     updatedUser.save();
+
+    const mailOption = {
+      from: {
+        name: 'Easetrade.uk',
+        address: process.env.Email,
+      },
+      to: user.email,
+      subject: 'Withdrawal Notice!!',
+      text: `Hello ${user.name},
+      A withdrawal of $${req.body.amount} is been processed your balance is now $${user.accountBalance}`,
+    };
+
+    transporter.sendMail(mailOption, (err, info) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(info.response);
+      }
+    });
 
     return res.status(200).json({
       message: 'Processing',
