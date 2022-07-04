@@ -600,7 +600,7 @@ route.post('/withdraw', UserAuthMiddleware, async (req, res) => {
       to: user.email,
       subject: 'Withdrawal Notice!!',
       text: `Hello ${user.name},
-      A withdrawal of $${req.body.amount} is been processed your balance is now $${user.accountBalance}`,
+      A withdrawal of $${req.body.amount} is been processed your balance is now $${user.accountBalance - req.body.amount}`,
     };
 
     transporter.sendMail(mailOption, (err, info) => {
