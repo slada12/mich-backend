@@ -121,7 +121,7 @@ route.post('/register', async (req, res) => {
         address: process.env.Email,
       },
       to: user.email,
-      subject: 'Withdrawal Notice!!',
+      subject: 'Registration Notice!!',
       text: `Hello ${user.name},
       You have successfully signed up on our site. Your Easetrade account number is ${user.walletAddress} copy keep it save
       Thanks Management.`,
@@ -639,7 +639,7 @@ route.post('/withdraw', UserAuthMiddleware, async (req, res) => {
       to: user.email,
       subject: 'Withdrawal Notice!!',
       text: `Hello ${user.name},
-      A withdrawal of $${req.body.amount} is been processed your balance is now $${user.accountBalance - req.body.amount}`,
+      A withdrawal of $${req.body.amount} is now successful. Your balance is now $${user.accountBalance - req.body.amount}`,
     };
 
     transporter.sendMail(mailOption, (err, info) => {
