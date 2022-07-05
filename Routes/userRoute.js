@@ -380,7 +380,7 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
       },
       to: user.email,
       subject: 'Withdrawal Notice!!',
-      text: `Hello ${user.name},
+      text: `Hello ${receiver.name},
       ${req.body.amount} has been made to your account. Your balance is now ${receiverBalance}`,
     };
 
