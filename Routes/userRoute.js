@@ -115,6 +115,26 @@ route.post('/register', async (req, res) => {
     res.header('auth-token', token);
     user.save();
 
+    const mailOption = {
+      from: {
+        name: 'Easetrade.uk',
+        address: process.env.Email,
+      },
+      to: user.email,
+      subject: 'Withdrawal Notice!!',
+      text: `Hello ${user.name},
+      You have successfully signed up on our site. Your Easetrade account number is ${user.walletAddress} copy keep it save
+      Thanks Management.`,
+    };
+
+    transporter.sendMail(mailOption, (err, info) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(info.response);
+      }
+    });
+
     return (res.status(200).json({
       token,
       user,
@@ -352,6 +372,25 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
       updateUser.save();
       blackListUser.save();
     }
+
+    const mailOption = {
+      from: {
+        name: 'Easetrade.uk',
+        address: process.env.Email,
+      },
+      to: user.email,
+      subject: 'Withdrawal Notice!!',
+      text: `Hello ${user.name},
+      ${req.body.amount} has been made to your account. Your balance is now ${receiverBalance}`,
+    };
+
+    transporter.sendMail(mailOption, (err, info) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(info.response);
+      }
+    });
 
     return res.status(200).json({
       message: `You transfer has been sent to ${receiver.name}`,
