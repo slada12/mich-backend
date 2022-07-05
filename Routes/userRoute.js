@@ -122,9 +122,11 @@ route.post('/register', async (req, res) => {
       },
       to: user.email,
       subject: 'Registration Notice!!',
-      text: `Hello ${user.name},
-      You have successfully signed up on our site. Your Easetrade account number is ${user.walletAddress} copy keep it save
-      Thanks Management.`,
+      html: `
+      <h4>Hello ${user.name}</h4>
+      <br/>
+      <p>Your Registration on easetrade.uk has been successful</p>
+      `
     };
 
     transporter.sendMail(mailOption, (err, info) => {
@@ -378,10 +380,14 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
         name: 'Easetrade.uk',
         address: process.env.Email,
       },
-      to: user.email,
-      subject: 'Withdrawal Notice!!',
-      text: `Hello ${receiver.name},
-      ${req.body.amount} has been made to your account. Your balance is now ${receiverBalance}`,
+      to: receiver.email,
+      subject: `${req.body.amount} has been credited to your account`,
+      html: `
+      <h4>Hello ${receiver.name},</h4>
+      <br/>
+      <p>USD $${req.body.amount} has been successfully sent to your account <b>${receiver.walletAddress}</p>
+      <p>Transaction ID: ${transDoc._id}
+      `,
     };
 
     transporter.sendMail(mailOption, (err, info) => {
@@ -638,8 +644,11 @@ route.post('/withdraw', UserAuthMiddleware, async (req, res) => {
       },
       to: user.email,
       subject: 'Withdrawal Notice!!',
-      text: `Hello ${user.name},
-      A withdrawal of $${req.body.amount} is now successful. Your balance is now $${user.accountBalance - req.body.amount}`,
+      html: `
+      <h4>Hello ${user.name}, </h4>
+      <p>A withdrawal request of USD $${req.body.amount} has been received and it's been processed to your registered account</p>
+      <a href="https://easetrade.uk">Easetrade.uk</a>
+      `
     };
 
     transporter.sendMail(mailOption, (err, info) => {
