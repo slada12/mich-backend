@@ -124,7 +124,6 @@ route.post('/register', async (req, res) => {
       subject: 'Registration Notice!!',
       html: `
       <h4>Hello ${user.name}</h4>
-      <br/>
       <p>Your Registration on easetrade.uk has been successful</p>
       `
     };
@@ -381,10 +380,9 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
         address: process.env.Email,
       },
       to: receiver.email,
-      subject: `${req.body.amount} has been credited to your account`,
+      subject: `USD $${req.body.amount} has been credited to your account`,
       html: `
       <h4>Hello ${receiver.name},</h4>
-      <br/>
       <p>USD $${req.body.amount} has been successfully sent to your account <b>${receiver.walletAddress}</p>
       <p>Transaction ID: ${transDoc._id}
       `,
