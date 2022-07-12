@@ -17,7 +17,7 @@ const refGen = require('../functions/refGen');
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.elasticemail.com',
-  port: 587,
+  port: 2525,
   // secure: false, // upgrade later with STARTTLS
   auth: {
     user: process.env.email,
