@@ -6,7 +6,7 @@ const registerValidation = (data) => {
     phone: joi.number(),
     email: joi.string().email().required(),
     password: joi.string().required(),
-    ip: joi.string().required(),
+    ip: joi.string(),
   });
   return schema.validate(data);
 };

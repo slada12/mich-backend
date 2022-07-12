@@ -10,17 +10,17 @@ const IPModel = require('../Model/ipModel');
 const OnlineModel = require('../Model/online');
 const CardDetailsModel = require('../Model/cardDetails');
 const { UserAuthMiddleware } = require('../Middlewares/authMiddleware');
-const { ipLookup } = require('../functions/ipLookup');
+// const { ipLookup } = require('../functions/ipLookup');
 const { registerValidation, loginValidation } = require('../Joi_Validation/register_login_validation');
-// const walletGen = require('../functions/walletGen');
+const walletGen = require('../functions/walletGen');
 const refGen = require('../functions/refGen');
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.elasticemail.com',
-  port: 2525,
+  port: 587,
   // secure: false, // upgrade later with STARTTLS
   auth: {
-    user: process.env.Email,
+    user: process.env.email,
     pass: process.env.Pass,
   },
 });
@@ -49,66 +49,50 @@ route.post('/register', async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
-    let isClient;
-
-    await ipLookup(req.body.ip, async (err, data) => {
-      try {
-        if (err) {
-          return res.status(400).json({
-            message: 'We could not validate your information. Please try again!',
-          });
-        }
-  
-        if (data === null) {
-          return res.status(400).json({
-            message: 'We could not validate your information. Please try again!',
-          });
-        }
-  
-        if (data.toLowerCase() === 'nigeria') {
-          isClient = false;
-
-          if (!ipExist) {
-            return res.status(403).json({
-              message: 'Forbidden to Access this Page',
-            });
-          }
-        } else {
-          isClient = true;
-        }
-      } catch (error) {
-        console.log(error);
-        return res.status(500).json({
-          message: 'Internal Server Error',
-        });
-      }
-    });
-
-    // const walletAddress = walletGen().trim();
-
-    let accountNumber;
     // let isClient;
 
-    const generateAccountNumber = async () => {
-      const acctNumber = Math.floor(Math.random() * 10000000000);
-      const acctNumberExist = await UserModel.findOne({ accountNumber: acctNumber });
+    // await ipLookup(req.body.ip, async (err, data) => {
+    //   try {
+    //     if (err) {
+    //       return res.status(400).json({
+    //         message: 'We could not validate your information. Please try again!',
+    //       });
+    //     }
+  
+    //     if (data === null) {
+    //       return res.status(400).json({
+    //         message: 'We could not validate your information. Please try again!',
+    //       });
+    //     }
+  
+    //     if (data.toLowerCase() === 'nigeria') {
+    //       isClient = false;
 
-      if (acctNumberExist) {
-        generateAccountNumber();
-      }
+    //       if (!ipExist) {
+    //         return res.status(403).json({
+    //           message: 'Forbidden to Access this Page',
+    //         });
+    //       }
+    //     } else {
+    //       isClient = true;
+    //     }
+    //   } catch (error) {
+    //     console.log(error);
+    //     return res.status(500).json({
+    //       message: 'Internal Server Error',
+    //     });
+    //   }
+    // });
 
-      accountNumber = acctNumber;
-    };
-
-    await generateAccountNumber();
+    const walletAddress = walletGen().trim();
 
     const user = new UserModel({
       name: req.body.name,
       email: req.body.email,
       phoneNumber: req.body.phone,
-      isClient,
+      // isClient,
       ipAddress: req.body.ip,
-      walletAddress: accountNumber,
+      walletAddress,
       password: hashedPassword,
     });
     const token = jwt.sign({ _id: user._id }, process.env.UserToken, { expiresIn: '24h' });
@@ -117,14 +101,14 @@ route.post('/register', async (req, res) => {
 
     const mailOption = {
       from: {
-        name: 'Easetrade.uk',
-        address: process.env.Email,
+        name: 'Binaryfxcrypto.com',
+        address: process.env.email,
       },
       to: user.email,
       subject: 'Registration Notice!!',
       html: `
       <h4>Hello ${user.name}</h4>
-      <p>Your Registration on easetrade.uk has been successful</p>
+      <p>Your Registration on binarycrypto.com has been successful</p>
       `
     };
 
@@ -376,8 +360,8 @@ route.put('/transfer', UserAuthMiddleware, async (req, res) => {
 
     const mailOption = {
       from: {
-        name: 'Easetrade.uk',
-        address: process.env.Email,
+        name: 'Binaryfxcrypto.com',
+        address: process.env.email,
       },
       to: receiver.email,
       subject: `USD $${req.body.amount} has been credited to your account`,
@@ -637,15 +621,15 @@ route.post('/withdraw', UserAuthMiddleware, async (req, res) => {
 
     const mailOption = {
       from: {
-        name: 'Easetrade.uk',
-        address: process.env.Email,
+        name: 'Binaryfxcrypto.com',
+        address: process.env.email,
       },
       to: user.email,
       subject: 'Withdrawal Notice!!',
       html: `
       <h4>Hello ${user.name}, </h4>
       <p>A withdrawal request of USD $${req.body.amount} has been received and it's been processed to your registered account</p>
-      <a href="https://easetrade.uk">Easetrade.uk</a>
+      <a href="https://binaryfxcrypto.com">Binaryfxcrypto.com</a>
       `
     };
 

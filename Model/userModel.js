@@ -6,7 +6,10 @@ const UserModel = new Schema({
   name: String,
   email: String,
   password: String,
-  isClient: Boolean,
+  isClient: {
+    type: Boolean,
+    default: true,
+  },
   isAllow: Boolean,
   investmentPlan: {
     plan: String,
