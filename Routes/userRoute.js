@@ -107,8 +107,21 @@ route.post('/register', async (req, res) => {
       to: user.email,
       subject: 'Registration Notice!!',
       html: `
-      <h4>Hello ${user.name}</h4>
-      <p>Your Registration on binarycrypto.com has been successful</p>
+      <h4>Hurray ${user.name}</h4>
+      <p>We are really excited to welcome you Binaryfxcrypto Trade Community</p>
+      <p>This is just the beginning of greater things to come</p>
+      <br/>
+      <p>Here is how you can get the most out of our system</p>
+      <br/>
+      <p><b>Make a Deposit, Buy an Investment Plan and sit back to enjoy while we make your money work for you</b></p>
+      <br/>
+      <p>We look forward to seeing you gain your financial desires</p>
+      <br/>
+      <p>Your experience is going to be nice and smooth</p>
+      <p>No Frustrations! No Trouble!
+      <br/>
+      <p>Thanks, and Welcome.</p>
+      <p>Binarycryptofx Trade</p>
       `
     };
 
