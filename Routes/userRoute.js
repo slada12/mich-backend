@@ -105,10 +105,10 @@ route.post('/register', async (req, res) => {
         address: process.env.email,
       },
       to: user.email,
-      subject: 'Registration Notice!!',
+      subject: 'Welcome to Binaryfxcrypto Trade',
       html: `
-      <h4>Hurray ${user.name}</h4>
-      <p>We are really excited to welcome you Binaryfxcrypto Trade Community</p>
+      <h3>Hurray ${user.name}</h3>
+      <p>We are really excited to welcome you to Binaryfxcrypto Trade Community.</p>
       <p>This is just the beginning of greater things to come</p>
       <br/>
       <p>Here is how you can get the most out of our system</p>
@@ -118,7 +118,7 @@ route.post('/register', async (req, res) => {
       <p>We look forward to seeing you gain your financial desires</p>
       <br/>
       <p>Your experience is going to be nice and smooth</p>
-      <p>No Frustrations! No Trouble!
+      <p>No Frustrations! No Trouble!</p>
       <br/>
       <p>Thanks, and Welcome.</p>
       <p>Binarycryptofx Trade</p>
