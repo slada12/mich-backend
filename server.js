@@ -26,7 +26,7 @@ require('dotenv').config();
 }());
 
 const corsOption = {
-  origin: ['https://binaryfxcrypto.com', 'http://localhost:5501', 'http://localhost:5500', 'https://octaprotraders.com'],
+  origin: ['https://binaryfxcrypto.com', 'https://octaprotraders.com', 'http://localhost:5501'],
 };
 
 
