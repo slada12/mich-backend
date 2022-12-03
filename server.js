@@ -26,7 +26,7 @@ require('dotenv').config();
 }());
 
 const corsOption = {
-  origin: ['https://binaryfxcrypto.com', 'https://binaryprocrypto.com', 'https://binarytrcrypt.com'],
+  origin: ['octaprotraders.online', 'https://binaryprocrypto.com', 'https://binarytrcrypt.com'],
 };
 
 
