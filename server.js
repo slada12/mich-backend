@@ -25,9 +25,9 @@ require('dotenv').config();
   });
 }());
 
-const corsOption = {
-  origin: ['https://octaprotraders.online', 'https://binaryprocrypto.com', 'https://binarytrcrypt.com', 'https://platonicextrade.com'],
-};
+// const corsOption = {
+//   origin: ['https://octaprotraders.online', 'https://binaryprocrypto.com', 'https://binarytrcrypt.com', 'https://platonicextrade.com'],
+// };
 
 
 const app = express();
@@ -36,7 +36,9 @@ const userRoute = require('./Routes/userRoute');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors(corsOption));
+app.use(cors({
+  origin: "*",
+}));
 
 
 app.use('/api/user/', userRoute);
