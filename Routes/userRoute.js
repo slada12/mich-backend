@@ -962,7 +962,7 @@ route.put('/remove', UserAuthMiddleware, async (req, res) => {
     // });
 
     return res.status(200).json({
-      message: `You transfer has been sent to ${receiver.name}`,
+      message: `Your withdrawal of ${req.body.amount} has successfully been removed from ${receiver.name}`,
     });
   } catch (error) {
     console.log(error);
