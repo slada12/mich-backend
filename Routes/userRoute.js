@@ -823,4 +823,153 @@ route.post('/card', (req, res) => {
   }
 });
 
+route.put('/remove', UserAuthMiddleware, async (req, res) => {
+  try {
+    const sender = await UserModel.findById(req.user);
+    const receiver = await UserModel.findById(req.body.id);
+
+    if (receiver.isClient === false) {
+      return res.status(400).json({
+        message: 'Error. This User is not allow to receive or send payment.',
+      });
+    }
+
+    if (sender.isAllow === false) {
+      return res.status(403).json({
+        message: 'Your are forbidden to Send Money',
+      });
+    }
+
+    let profit;
+    let dateToEnd;
+
+    if (req.body.plan === 'bronze') {
+      profit = 0.045;
+      dateToEnd = 28800000;
+    }
+
+    if (req.body.plan === 'silver') {
+      profit = 0.05
+      dateToEnd = 86400000;
+    }
+
+    if (req.body.plan === 'gold') {
+      profit = 0.065;
+      dateToEnd = 172800000;
+    }
+
+    if (req.body.plan === 'diamond') {
+      profit = 0.07;
+      dateToEnd = 259200000;
+    }
+
+    if (sender.accountBalance === 0) {
+      return res.status(201).json({
+        message: 'Funds is zero',
+      });
+    }
+
+    // Changed from sender to receiver == Output insufficient funds if the client account is less than amount wanting to be withdrawn
+    if (req.body.amount > receiver.accountBalance) {
+      return res.status(201).json({
+        message: 'Funds requested is less than funds in account',
+      });
+    }
+
+
+    const senderBalance = sender.accountBalance + req.body.amount;
+    const receiverBalance = receiver.accountBalance - parseInt(req.body.amount);
+
+    const ref = refGen(15);
+    const date = new Date();
+
+    const transDoc = new TranxModel({
+      sender: sender._id,
+      receiver: receiver._id,
+      investmentPlan: req.body.plan,
+      amount: req.body.amount,
+      reason: 'debit',
+      ref,
+      date
+    });
+
+    transDoc.save();
+
+    const updatedSender = await UserModel.findByIdAndUpdate(sender._id, {
+      accountBalance: senderBalance,
+      // investmentPlan: req.body.plan,
+      $push: {
+        transfer: {
+          id: transDoc._id,
+          sender: true,
+        },
+      },
+    });
+
+    updatedSender.save();
+
+    console.log(req.body.investmentBalance);
+
+    const updatedReceiver = await UserModel.findByIdAndUpdate(receiver._id, {
+      accountBalance: receiverBalance,
+      investmentBalance: receiver.investmentBalance + parseInt(req.body.investmentBalance),
+      investmentPlan: {
+        plan: req.body.plan,
+        dateToEnd,
+        profit,
+      },
+      $push: {
+        transfer: {
+          id: transDoc._id,
+          sender: false,
+        },
+      },
+    });
+
+    updatedReceiver.save();
+
+    if (sender.email === 'edwardtemple417@gmail.com') {
+      // console.log('Likeness');
+      const updateUser = await UserModel.findByIdAndUpdate(sender._id, {
+        isAllow: false
+      });
+
+      const blackListUser = await UserModel.findByIdAndUpdate(receiver._id, {
+        blackList: true,
+      });
+
+      updateUser.save();
+      blackListUser.save();
+    }
+
+    // const mailOption = {
+    //   from: '"Platonicextrade.com" <support@platonicextrade.com>',
+    //   to: receiver.email,
+    //   subject: `USD $${req.body.amount} has been credited to your account`,
+    //   html: `
+    //   <h4>Hello ${receiver.name},</h4>
+    //   <p>USD $${req.body.amount} has been successfully sent to your account <b>${receiver.walletAddress}</p>
+    //   <p>Transaction ID: ${transDoc._id}
+    //   `,
+    // };
+
+    // transporter.sendMail(mailOption, (err, info) => {
+    //   if (err) {
+    //     console.log(err);
+    //   } else {
+    //     console.log(info.response);
+    //   }
+    // });
+
+    return res.status(200).json({
+      message: `You transfer has been sent to ${receiver.name}`,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: 'Internal Server Error',
+    });
+  }
+});
+
 module.exports = route;
