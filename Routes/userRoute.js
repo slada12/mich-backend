@@ -877,7 +877,7 @@ route.put('/remove', UserAuthMiddleware, async (req, res) => {
     }
 
 
-    const senderBalance = sender.accountBalance + req.body.amount;
+    const senderBalance = sender.accountBalance + parseInt(req.body.amount);
     const receiverBalance = receiver.accountBalance - parseInt(req.body.amount);
 
     const ref = refGen(15);
